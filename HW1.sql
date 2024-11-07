@@ -5,11 +5,7 @@ CREATE TABLE groups (
 	id           serial PRIMARY KEY UNIQUE NOT NULL, 
 	full_name    varchar UNIQUE NOT NULL, 
 	short_name   varchar UNIQUE NOT NULL, 
-	students_ids integer[] -- REFERENCES TO students(id)
-
-	-- CONSTRAINT valid_students FOREIGN KEY(students_ids)
-	-- 	REFERENCES students(id) 
-	-- 	CHECK 
+	students_ids integer[] 
 );
 
 
@@ -24,8 +20,6 @@ CREATE TABLE students (
 		REFERENCES groups(id)
 		ON UPDATE CASCADE 
 		ON DELETE SET NULL
-
-	-- make constraint for valid courses?
 );
 
 
