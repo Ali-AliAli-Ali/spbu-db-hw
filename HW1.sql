@@ -109,6 +109,10 @@ INSERT INTO students(first_name, last_name, group_id, courses_ids) VALUES
 ('Максим', 'Волков', 4, '{1,2,3,6}'),
 ('Наталья', 'Светличная', 6, '{3,4,5}');
 
+UPDATE groups SET students_ids = ARRAY(
+	SELECT id FROM students WHERE group_id=groups.id
+);
+
 INSERT INTO psychology_course(student_id, grade_str) VALUES
 (1, 'A'),
 (6, 'C'),
