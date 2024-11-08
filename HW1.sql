@@ -121,7 +121,7 @@ INSERT INTO psychology_course(student_id, grade_str) VALUES
 
 SELECT * FROM students WHERE 4=ANY(courses_ids);
 
-SELECT full_name, students_ids FROM GROUPS WHERE short_name LIKE '18%';
+SELECT full_name, students_ids FROM groups WHERE short_name LIKE '18%';
 
 SELECT students.last_name, courses.name, courses.is_exam FROM courses JOIN students 
 	ON courses.id = ANY(students.courses_ids) 
