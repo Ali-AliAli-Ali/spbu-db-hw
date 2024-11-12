@@ -102,10 +102,9 @@ JOIN (
 		ORDER BY course_id
 ) AS student_courses_count ON student_courses_count.course_id=courses.id
 
-CREATE VIEW courses_avg_grades AS (
-	SELECT AVG(machine_learning_course.grade) AS ml_avg_grade, AVG(psychology_course.grade) AS psy_avg_grade
-	FROM machine_learning_course OUTER JOIN psychology_course; 
-);
+
+SELECT AVG(grade) AS avg_grade FROM machine_learning_course;
+SELECT AVG(grade) AS avg_grade FROM psychology_course;
 
 
 
