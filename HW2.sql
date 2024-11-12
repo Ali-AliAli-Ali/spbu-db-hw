@@ -31,12 +31,23 @@ ALTER TABLE students DROP COLUMN courses_ids;
 ALTER TABLE groups DROP COLUMN students_ids;
 
 
+-- 2
+
+
+-- done during table creation, but nevertheless
+ALTER TABLE courses ADD UNIQUE (name);
+
+-- indexing noteably enhances search query performance, if the table is large, and may reduce it otherwise. Indexes are a specific data structure, containing a copy of the table data subset and pointers to the original, organized in a way simplifying its search. 
+CREATE INDEX group_idx ON students(group_id);
+
+
 -- 3
  
 SELECT students.first_name, students.last_name, courses.name AS course_name
 FROM students 
 JOIN student_courses ON students.id=student_courses.student_id
-JOIN courses ON courses.id=student_courses.course_id;
+JOIN courses ON courses.id=student_courses.course_id
+LIMIT 20;
 
 
 CREATE TABLE machine_learning_course (
