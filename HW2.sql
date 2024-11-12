@@ -91,5 +91,23 @@ WHERE average_grade = (
 LIMIT 10;
 
 
+-- 4
+
+
+SELECT student_courses_count.course_id, courses.name, student_courses_count.students_number FROM courses 
+JOIN (
+	SELECT course_id, COUNT(*) AS students_number
+	FROM student_courses
+		GROUP BY course_id
+		ORDER BY course_id
+) AS student_courses_count ON student_courses_count.course_id=courses.id
+
+CREATE VIEW courses_avg_grades AS (
+	SELECT AVG(machine_learning_course.grade) AS ml_avg_grade, AVG(psychology_course.grade) AS psy_avg_grade
+	FROM machine_learning_course OUTER JOIN psychology_course; 
+);
+
+
+
 
 
