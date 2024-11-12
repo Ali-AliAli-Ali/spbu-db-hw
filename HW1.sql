@@ -109,6 +109,10 @@ INSERT INTO students(first_name, last_name, group_id, courses_ids) VALUES
 ('Максим', 'Волков', 4, '{1,2,3,6}'),
 ('Наталья', 'Светличная', 6, '{3,4,5}');
 
+UPDATE groups SET students_ids = ARRAY(
+	SELECT id FROM students WHERE group_id=groups.id
+);
+
 INSERT INTO psychology_course(student_id, grade_str) VALUES
 (1, 'A'),
 (6, 'C'),
@@ -121,7 +125,7 @@ INSERT INTO psychology_course(student_id, grade_str) VALUES
 
 SELECT * FROM students WHERE 4=ANY(courses_ids);
 
-SELECT full_name, students_ids FROM GROUPS WHERE short_name LIKE '18%';
+SELECT full_name, students_ids FROM groups WHERE short_name LIKE '18%';
 
 SELECT students.last_name, courses.name, courses.is_exam FROM courses JOIN students 
 	ON courses.id = ANY(students.courses_ids) 
