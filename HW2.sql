@@ -43,6 +43,7 @@ CREATE INDEX group_idx ON students(group_id);
 
 -- 3
  
+
 SELECT students.first_name, students.last_name, courses.name AS course_name
 FROM students 
 JOIN student_courses ON students.id=student_courses.student_id
@@ -75,13 +76,19 @@ INSERT INTO machine_learning_course(student_id, grade_str) VALUES
 (8, 'A'),
 (10, 'A');
 
-SELECT students.first_name, students.last_name 
-FROM students 
-JOIN student_courses ON students.id=student_courses.student_id
-JOIN courses ON courses.id=student_courses.course_id
-    GROUP BY 
-;
 
+CREATE VIEW students_avg_grades AS
+	SELECT students.id, students.first_name, students.last_name, 
+		(psychology_course.grade + machine_learning_course.grade)::float/2 AS average_grade
+	FROM students 
+	JOIN psychology_course       ON students.id=psychology_course.student_id
+	JOIN machine_learning_course ON students.id=machine_learning_course.student_id;
+
+SELECT * FROM students_avg_grades
+WHERE average_grade = (
+	SELECT MAX(average_grade) FROM students_avg_grades
+)
+LIMIT 10;
 
 
 
