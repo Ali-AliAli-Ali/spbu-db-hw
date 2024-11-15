@@ -25,4 +25,20 @@ CREATE TEMP TABLE high_sales_products AS
 SELECT * FROM high_sales_products LIMIT 10;
 
 
+-- 2
 
+
+WITH employee_sales_stats AS (
+    SELECT employees.employee_id, employees.name, 
+        SUM(sales.quantity) AS sum_sales,
+        AVG(sales.quantity) AS avg_sales
+            FROM employees
+            JOIN sales ON employees.employee_id = sales.employee_id
+            WHERE employees.position LIKE 'Sales%' AND sales.sale_date >= CURRENT_DATE-30
+        GROUP BY employees.employee_id
+)
+SELECT * FROM employee_sales_stats
+    WHERE avg_sales >= (
+        SELECT AVG(sales.quantity) FROM sales
+            WHERE sale_date >= CURRENT_DATE-30
+    );
