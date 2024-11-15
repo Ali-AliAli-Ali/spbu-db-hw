@@ -8,7 +8,8 @@ VALUES
     (3, 3, 1, '2024-11-10'),
     (3, 2, 5, '2024-11-10'),
     (4, 1, 8, '2024-11-11'),
-    (2, 1, 12, '2024-11-13');
+    (2, 1, 12, '2024-11-13'),
+    (2, 4, 25, '2024-11-13');
 
 
 CREATE TEMP TABLE high_sales_products AS
@@ -43,4 +44,42 @@ SELECT * FROM employee_sales_stats
             WHERE sale_date >= CURRENT_DATE-30
     )
     LIMIT 10;
+
+
+-- 3
+
+
+WITH employee_hierarchy AS (
+    SELECT e1.employee_id AS manager_id, e1.name AS manager, 
+        e2.employee_id AS employee_id, e2.name AS employee
+        FROM employees e1
+        JOIN employees e2 ON e1.employee_id = e2.manager_id
+)
+SELECT employee_id, employee FROM employee_hierarchy 
+    WHERE manager_id = 1
+LIMIT 10;
+
+
+-- 4
+
+
+WITH last_sales_products AS (
+        SELECT product_id, SUM(quantity) AS total_sales, date_part('month', sale_date)::INT AS sale_month
+            FROM sales
+            WHERE date_part('month', sale_date) = date_part('month', CURRENT_DATE - INTERVAL'1 month') OR date_part('month', sale_date) = date_part('month', CURRENT_DATE)
+        GROUP BY sale_month, product_id
+        ORDER BY total_sales DESC  
+    )
+(
+    SELECT * FROM last_sales_products 
+        WHERE sale_month = date_part('month', CURRENT_DATE - INTERVAL'1 month')
+    LIMIT 3
+)
+UNION
+(
+    SELECT * FROM last_sales_products 
+        WHERE sale_month = date_part('month', CURRENT_DATE)
+    LIMIT 3
+)
+ORDER BY sale_month, total_sales DESC;
 
