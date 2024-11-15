@@ -41,4 +41,6 @@ SELECT * FROM employee_sales_stats
     WHERE avg_sales >= (
         SELECT AVG(sales.quantity) FROM sales
             WHERE sale_date >= CURRENT_DATE-30
-    );
+    )
+    LIMIT 10;
+
