@@ -26,7 +26,7 @@ VALUES
     ('Eve Davis', 'Developer', 'IT', 75000, NULL),
     ('Frank Miller', 'Intern', 'IT', 35000, 5);
 
-SELECT * FROM employees LIMIT 5;
+SELECT * FROM employees LIMIT 10;
 
 CREATE TABLE IF NOT EXISTS sales(
     sale_id SERIAL PRIMARY KEY,
@@ -46,7 +46,7 @@ VALUES
     (4, 2, 8, '2024-10-21'),
     (2, 1, 12, '2024-11-01');
 
-SELECT * FROM sales LIMIT 5;
+SELECT * FROM sales LIMIT 10;
 
 
 CREATE TABLE IF NOT EXISTS products (
@@ -62,50 +62,37 @@ VALUES
     ('Product B', 200.00),
     ('Product C', 100.00);
 
-
-SELECT * FROM products LIMIT 3;
+SELECT * FROM products LIMIT 10;
 
 
 -- Временная таблица
 CREATE TEMP TABLE sales_temp AS
-SELECT * FROM sales;
+    SELECT * FROM sales;
 
-SELECT * from sales_temp LIMIT 3;
+SELECT * from sales_temp LIMIT 10;
 
 DROP TABLE sales_temp;
 
+
+
 -- Задание 1. Придумайте временную таблицу с использованием группировки данных
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 -- Продажи товаров за последний месяц
 CREATE TEMP TABLE current_month_sales AS
-SELECT product_id, SUM(quantity) AS total_sales
-FROM sales
-WHERE date_part('month', sale_date) = date_part('month', CURRENT_DATE)
-GROUP BY product_id;
+    SELECT product_id, SUM(quantity) AS total_sales
+        FROM sales
+        WHERE date_part('month', sale_date) = date_part('month', CURRENT_DATE)
+    GROUP BY product_id;
 
 -- Проверим данные
-SELECT * FROM current_month_sales LIMIT 5;
+SELECT * FROM current_month_sales LIMIT 10;
 
 DROP TABLE current_month_sales;
 
 
 -- Views
 CREATE VIEW sales_view AS
-SELECT * FROM sales;
+    SELECT * FROM sales;
 
 DROP VIEW sales_view;
 
@@ -114,33 +101,22 @@ DROP VIEW sales_view;
 -- Запрос для отображения иерархии сотрудников: менеджер и его подчиненные.
 WITH employee_hierarchy AS (
     SELECT e1.name AS manager, e2.name AS employee
-    FROM employees e1
-    JOIN employees e2 ON e1.employee_id = e2.manager_id
+        FROM employees e1
+        JOIN employees e2 ON e1.employee_id = e2.manager_id
 )
-SELECT * FROM employee_hierarchy LIMIT 5;
+SELECT * FROM employee_hierarchy LIMIT 10;
 
 -- DROP TABLE employee_hierarchy;
 
 
+
 -- Задание 2: CTE для вычисления средней зарплаты по отделам
-
-
-
-
-
-
-
-
-
-
-
-
 
 -- Решение 1
 WITH department_avg_salary AS (
     SELECT department, AVG(salary) AS avg_salary
-    FROM employees
-    GROUP BY department
+        FROM employees
+        GROUP BY department
 )
 SELECT * FROM department_avg_salary;
 
@@ -250,25 +226,10 @@ ORDER BY total_sales DESC
 LIMIT 5;
 
 
+
 -- Задание 3:
 -- Индекс для sales по полю sale_date
 -- Сделать запрос продаж за выбранный период
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 CREATE INDEX idx_sale_date ON sales(sale_date);
 
