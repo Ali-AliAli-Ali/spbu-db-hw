@@ -219,11 +219,11 @@ DROP INDEX idx_department;
 -- Трассировка запросов
 EXPLAIN ANALYZE
 SELECT product_id, SUM(quantity) AS total_sales
-FROM sales
-WHERE date_part('month', sale_date) = date_part('month', CURRENT_DATE)
-GROUP BY product_id
-ORDER BY total_sales DESC
-LIMIT 5;
+    FROM sales
+    WHERE date_part('month', sale_date) = date_part('month', CURRENT_DATE)
+    GROUP BY product_id
+    ORDER BY total_sales DESC
+LIMIT 10;
 
 
 
@@ -234,7 +234,7 @@ LIMIT 5;
 CREATE INDEX idx_sale_date ON sales(sale_date);
 
 -- Пример запроса для проверки индекса
-SELECT * FROM sales WHERE sale_date BETWEEN '2024-11-01' AND '2024-11-30' LIMIT 5;
+SELECT * FROM sales WHERE sale_date BETWEEN '2024-11-01' AND '2024-11-30' LIMIT 10;
 
 
 
