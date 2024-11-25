@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS employees (
     employee_id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    position VARCHAR(50) NOT NULL,
-    department VARCHAR(50) NOT NULL,
-    salary NUMERIC(10, 2) NOT NULL,
-    manager_id INT REFERENCES employees(employee_id)
+    name        VARCHAR(50) NOT NULL,
+    position    VARCHAR(50) NOT NULL,
+    department  VARCHAR(50) NOT NULL,
+    salary      NUMERIC(10, 2) NOT NULL,
+    manager_id  INT REFERENCES employees(employee_id)
 );
 
 -- Пример данных
@@ -17,15 +17,15 @@ VALUES
     ('Eve Davis', 'Developer', 'IT', 75000, NULL),
     ('Frank Miller', 'Intern', 'IT', 35000, 5);
 
+SELECT * FROM employees LIMIT 10;
 
-SELECT * FROM employees LIMIT 5;
 
 CREATE TABLE IF NOT EXISTS sales(
-    sale_id SERIAL PRIMARY KEY,
+    sale_id     SERIAL PRIMARY KEY,
     employee_id INT REFERENCES employees(employee_id),
-    product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    sale_date DATE NOT NULL
+    product_id  INT NOT NULL,
+    quantity    INT NOT NULL,
+    sale_date   DATE NOT NULL
 );
 
 -- Пример данных
@@ -38,7 +38,7 @@ VALUES
     (4, 2, 8, '2024-10-21'),
     (2, 1, 12, '2024-11-01');
 
-SELECT * FROM sales LIMIT 5;
+SELECT * FROM sales LIMIT 10;
 
 
 CREATE TABLE IF NOT EXISTS products (
@@ -53,7 +53,6 @@ VALUES
     ('Product A', 150.00),
     ('Product B', 200.00),
     ('Product C', 100.00);
-
 
 
 --
@@ -72,6 +71,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- CREATE TRIGGER trigger_name
 -- {BEFORE | AFTER | INSTEAD OF} {INSERT | UPDATE | DELETE | TRUNCATE}
 -- ON table_name
@@ -79,12 +79,11 @@ $$ LANGUAGE plpgsql;
 -- [WHEN (condition)]  -- Условие (опционально)
 -- EXECUTE FUNCTION function_name();
 
-
-
 --- {BEFORE | AFTER | INSTEAD OF}
 --- BEFORE - перед событием. Позволяет модифицировать данные.
 --- AFTER - после события. Используется, если данные уже изменились
 --- INSTEAD OF - применяется для представлений (VIEW), чтобы переопределить действие
+
 
 -- Функция для проверки зарплаты
 CREATE OR REPLACE FUNCTION check_salary()
@@ -99,43 +98,15 @@ $$ LANGUAGE plpgsql;
 
 -- Триггер, вызывающий эту функцию
 CREATE TRIGGER salary_check_trigger
-BEFORE INSERT OR UPDATE ON employees
-FOR EACH ROW
-WHEN (NEW.salary IS NOT NULL)  -- Условие: срабатывает только если указана зарплата
+    BEFORE INSERT OR UPDATE ON employees
+    FOR EACH ROW
+    WHEN (NEW.salary IS NOT NULL)  -- Условие: срабатывает только если указана зарплата
 EXECUTE FUNCTION check_salary();
+
+
 
 --- Задание 1. Добавьте нового сотрудника с минимальной зарплатой 15000 рублей. Что произойдет? Как изменится результат,
 --  если в 1 запрос положить сотрудника подходящего по условию и не подходящего. Влияет ли порядок записей на исполнение?
----
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 INSERT INTO employees (name, position, department, salary, manager_id)
 VALUES
@@ -154,17 +125,15 @@ SELECT * FROM employees LIMIT 200;
 
 
 
-
-
 ---- Другие разновидности триггеров
 CREATE TABLE IF NOT EXISTS employees_archive (
-    archive_id SERIAL PRIMARY KEY,
+    archive_id  SERIAL PRIMARY KEY,
     employee_id INT,
-    name VARCHAR(50),
-    position VARCHAR(50),
-    department VARCHAR(50),
-    salary NUMERIC(10, 2),
-    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    name        VARCHAR(50),
+    position    VARCHAR(50),
+    department  VARCHAR(50),
+    salary      NUMERIC(10, 2),
+    deleted_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -178,9 +147,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_archive_employee
-BEFORE DELETE ON employees
-FOR EACH ROW
+    BEFORE DELETE ON employees
+    FOR EACH ROW
 EXECUTE FUNCTION archive_employee();
+
 
 DELETE FROM employees WHERE employee_id = 120;
 
@@ -190,29 +160,10 @@ SELECT * FROM employees_archive WHERE employee_id = 120;
 
 
 
-
 --- Задание 2. Напишите свой собственный триггер
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 -- Отладочное сообщение
 -- RAISE NOTICE 'Ваше сообщение: %', значение1 [, значение2, ...];
-
-
 
 CREATE OR REPLACE FUNCTION update_salary_on_position_change()
 RETURNS TRIGGER AS $$
@@ -239,22 +190,6 @@ EXECUTE FUNCTION update_salary_on_position_change();
 
 
 -- Задание 3. Добавьте в свой триггер RAISE NOTICE, посмотрите: где отобразился вывод
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 INSERT INTO employees (name, position, department, salary)
 VALUES
@@ -288,8 +223,6 @@ DELETE FROM employees WHERE name ILIKE '%Test%';
 
 
 
-
-
 -- Транзакции
 
 BEGIN;
@@ -307,6 +240,8 @@ COMMIT;
 
 -- Откат транзакции
 ROLLBACK;
+
+
 
 
 -- Домашнее задание
