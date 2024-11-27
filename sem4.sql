@@ -105,8 +105,7 @@ EXECUTE FUNCTION check_salary();
 
 
 
---- Задание 1. Добавьте нового сотрудника с минимальной зарплатой 15000 рублей. Что произойдет? Как изменится результат,
---  если в 1 запрос положить сотрудника подходящего по условию и не подходящего. Влияет ли порядок записей на исполнение?
+--- Задание 1. Добавьте нового сотрудника с минимальной зарплатой 15000 рублей. Что произойдет? Как изменится результат, если в 1 запрос положить сотрудника подходящего по условию и не подходящего. Влияет ли порядок записей на исполнение?
 
 INSERT INTO employees (name, position, department, salary, manager_id)
 VALUES
@@ -182,9 +181,9 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER trigger_update_salary
-BEFORE UPDATE ON employees
-FOR EACH ROW
-WHEN (OLD.position IS DISTINCT FROM NEW.position)
+    BEFORE UPDATE ON employees
+    FOR EACH ROW
+    WHEN (OLD.position IS DISTINCT FROM NEW.position)
 EXECUTE FUNCTION update_salary_on_position_change();
 
 
@@ -193,22 +192,22 @@ EXECUTE FUNCTION update_salary_on_position_change();
 
 INSERT INTO employees (name, position, department, salary)
 VALUES
-    ('Test', 'Tester', 'QA', 30000);
+    ('George Washington', 'Tester', 'QA', 30000);
 
 
-SELECT * FROM employees WHERE name = 'Test' LIMIT 5;
-
-UPDATE employees
-SET name = 'Test2'
-WHERE name = 'Test';
-
-SELECT * FROM employees WHERE name = 'Test2' LIMIT 5;
+SELECT * FROM employees WHERE position LIKE '%Test%' LIMIT 5;
 
 UPDATE employees
-SET position = 'Manager'
-WHERE name = 'Test2';
+    SET name = 'Ginger Washington'
+    WHERE position = 'Tester';
 
-SELECT * FROM employees WHERE name = 'Test2' LIMIT 5;
+SELECT * FROM employees WHERE position = 'Tester' LIMIT 5;
+
+UPDATE employees
+    SET position = 'Manager'
+    WHERE name = 'Ginger Washington';
+
+SELECT * FROM employees WHERE name = 'Ginger Washington' LIMIT 5;
 
 DELETE FROM employees WHERE name ILIKE '%Test%';
 
