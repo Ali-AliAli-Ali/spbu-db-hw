@@ -103,6 +103,7 @@ CREATE TRIGGER update_sales_trigger
     FOR EACH ROW
     EXECUTE FUNCTION update_sales();
 
+
 INSERT INTO employees_sales VALUES
     ('Alice Johnson', 'Product D', 3);
 INSERT INTO employees_sales VALUES
@@ -111,8 +112,87 @@ INSERT INTO employees_sales VALUES
     ('James Jarvis', 'Product A', 3);
 SELECT * FROM employees_sales;
 
--- SELECT tgname FROM pg_trigger WHERE tgrelid = 'employees'::regclass;
--- DROP TRIGGER trigger_update_salary ON employees;
 
+
+-- 2
+
+
+CREATE OR REPLACE FUNCTION check_product_name()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT (NEW.name LIKE 'Product %') THEN
+        RAISE EXCEPTION 'Product name should have a form "Product [a-zA-Z\s]+".'
+        USING HINT 'Please check your product(s) name(s) and try again.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER check_product_name_trigger
+    BEFORE INSERT ON products
+    FOR EACH ROW
+EXECUTE FUNCTION check_product_name();
+
+
+BEGIN;
+
+    INSERT INTO products(name, price) VALUES 
+        ('Product S', 200),
+        ('X', 35000);
+-- Transaction fails because of trigger raising an exception to wrong products names.
+
+COMMIT;
+
+BEGIN;
+
+    INSERT INTO products(name, price) VALUES 
+        ('Product S', 200),
+        ('Product X', 3500);
+    SELECT name, price FROM products;
+
+SAVEPOINT savepoint_sx;
+COMMIT;
+
+BEGIN;
+
+    INSERT INTO products(name, price) VALUES 
+        ('Product E', 200);
+    SELECT name, price FROM products;
+
+    INSERT INTO products(name, price) VALUES 
+        ('Product F', NULL);
+    -- This transaction fails because of a type restriction on column "price", so we rollback to savepoint to add products E,F again.
+
+ROLLBACK TO savepoint_sx;
+
+BEGIN;
+    SELECT name, price FROM products;
+    INSERT INTO products(name, price) VALUES 
+        ('Product E', 200),
+        ('Product F', 110);
+    SELECT name, price FROM products;
+COMMIT;
+
+
+
+BEGIN;
+    DO $$ 
+    BEGIN 
+        RAISE NOTICE 'Always successful transaction';
+    END $$;
+COMMIT;
+-- Example of always successful transaction, independent from any conditions of workspace.
+BEGIN;
+    DO $$ 
+    BEGIN
+        RAISE EXCEPTION 'Lovushka Jokera';
+    END $$;
+COMMIT;
+-- Example of always failing transaction, independent from any conditions of workspace.
+
+
+
+-- SELECT tgname FROM pg_trigger WHERE tgrelid = 'employees'::regclass;
+-- DROP TRIGGER recalc_salaries_trigger ON employees;
 
 
