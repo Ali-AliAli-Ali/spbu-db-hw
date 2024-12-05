@@ -244,27 +244,58 @@ INSERT INTO ros_sdk_compatty(sdk, ros)
     SELECT 2 AS sdk, id AS ros FROM ros_versions 
         WHERE ros_versions.name = ANY(
             '{"foxy", "eloquent", "dashing"}'
-        )
+        );
     UNION
     SELECT 6 AS sdk, id AS ros FROM ros_versions 
         WHERE ros_versions.name = ANY(
             '{"galactic", "rolling", "humble", "foxy"}'
         )
     UNION
-    SELECT 11 AS sdk, id AS ros FROM ros_versions 
+    SELECT 10 AS sdk, id AS ros FROM ros_versions 
         WHERE ros_versions.name = ANY(
             '{"rolling", "humble", "iron", "jazzy"}'
         )
     UNION
-    SELECT 12 AS sdk, id AS ros FROM ros_versions 
+    SELECT 11 AS sdk, id AS ros FROM ros_versions 
         WHERE ros_versions.name = ANY(
             '{"rolling", "foxy", "humble", "iron", "jazzy"}'
         );
 
+
 -- queries
 
 
-SELECT * FROM sdk_versions LIMIT 20;
-UPDATE cameras 
-    SET is_eol = false 
-    WHERE name = 'T265';
+SELECT cameras.name AS camera, cameras.type AS camera_type, ros_versions.full_name AS ros 
+    FROM cameras JOIN sdk_cameras_compatty 
+        ON cameras.id = sdk_cameras_compatty.camera 
+    JOIN ros_sdk_compatty 
+        ON sdk_cameras_compatty.sdk = ros_sdk_compatty.sdk
+    JOIN ros_versions 
+        ON ros_sdk_compatty.ros = ros_versions.id
+ORDER BY camera;
+
+
+SELECT cameras.name AS camera, cameras.type AS camera_type, ros_sdk_compatty.sdk 
+    FROM cameras JOIN sdk_cameras_compatty 
+        ON cameras.id = sdk_cameras_compatty.camera
+    JOIN ros_sdk_compatty 
+        ON sdk_cameras_compatty.sdk = ros_sdk_compatty.sdk
+    JOIN ros_versions 
+        ON ros_sdk_compatty.sdk = ros_versions.id;
+
+SELECT mode() WITHIN GROUP (ORDER BY year) AS popular_year 
+    FROM sdk_versions
+LIMIT 20;
+
+SELECT ubu_version AS ubuntu, NOT BOOL_AND(is_eol) AS is_ros_mainained 
+    FROM ros_versions 
+	GROUP BY ubu_version
+    ORDER BY ubu_version
+LIMIT 20;
+
+SELECT ubu_version AS ubuntu, COUNT(ubu_version) AS supporting_ros_count 
+    FROM ros_versions
+	GROUP BY ubu_version
+    ORDER BY supporting_ros_count DESC
+LIMIT 20;
+
