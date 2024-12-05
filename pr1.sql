@@ -28,19 +28,6 @@ CREATE TABLE sdk_versions (
     does_compile BOOLEAN NOT NULL
 );
 
-INSERT INTO sdk_versions(name, year, does_compile) VALUES
-('2.45.0', 2021, false);
-('2.47.0', 2021, true);
-('2.48.0', 2021, true);
-('2.49.0', 2021, true);
-('2.50.0', 2021, true),
-('2.51.1', 2022, true),
-('2.52.1', 2022, false),
-('2.53.1', 2022, false),
-('2.54.2', 2023, false),
-('2.55.1', 2024, false),
-('2.56.3', 2024, false);
-
 
 -- linking table creation
 
@@ -195,3 +182,17 @@ INSERT INTO ros_versions(name, full_name, ubu_version) VALUES
 SELECT * FROM ros_versions LIMIT 20;
 
 
+INSERT INTO sdk_versions(name, year, does_compile) VALUES
+-- ('2.45.0', 2021, false);
+('2.47.0', 2021, true),
+('2.48.0', 2021, true),
+('2.49.0', 2021, true),
+('2.50.0', 2021, true),
+('2.51.1', 2022, true),
+('2.52.1', 2022, false),
+('2.53.1', 2022, false),
+('2.54.2', 2023, false),
+('2.55.1', 2024, false),
+('2.56.3', 2024, false);
+
+SELECT * FROM sdk_versions LIMIT 20;
