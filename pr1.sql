@@ -14,8 +14,10 @@ CREATE TABLE cameras (
 
 CREATE TABLE ros_versions (
 	id           SERIAL PRIMARY KEY UNIQUE NOT NULL, 
+	full_name    VARCHAR NOT NULL, 
 	name         VARCHAR NOT NULL, 
-    ubu_version  VARCHAR NOT NULL
+    ubu_version  VARCHAR NOT NULL,
+    is_eol   BOOLEAN NOT NULL DEFAULT false
 );
 
 
@@ -25,6 +27,19 @@ CREATE TABLE sdk_versions (
     year         INT NOT NULL CHECK (year >= 2000 AND year <= date_part('year', CURRENT_DATE)),
     does_compile BOOLEAN NOT NULL
 );
+
+INSERT INTO sdk_versions(name, year, does_compile) VALUES
+('2.45.0', 2021, false);
+('2.47.0', 2021, true);
+('2.48.0', 2021, true);
+('2.49.0', 2021, true);
+('2.50.0', 2021, true),
+('2.51.1', 2022, true),
+('2.52.1', 2022, false),
+('2.53.1', 2022, false),
+('2.54.2', 2023, false),
+('2.55.1', 2024, false),
+('2.56.3', 2024, false);
 
 
 -- linking table creation
@@ -146,4 +161,37 @@ CREATE OR REPLACE TRIGGER check_ubuntu_trigger
     BEFORE INSERT OR UPDATE ON ros_versions
     FOR EACH ROW
 EXECUTE FUNCTION check_ubuntu();
+
+
+-- table filling
+
+
+INSERT INTO cameras(name, type, is_eol) VALUES
+('L515', 'LiDAR Camera', true),
+('F200', 'Depth Camera', true),
+('D435', 'Depth Camera', false),
+('D435if', 'Depth Camera', false),
+('D415', 'Depth Camera', false),
+('D415i', 'Depth Camera', false);
+
+SELECT * FROM cameras LIMIT 20;
+
+
+INSERT INTO ros_versions(name, full_name, ubu_version, is_eol) VALUES
+('Ardent Apalone', 'ardent', '16.04', true),
+('Bouncy Bolson', 'bouncy', '16.04', true),
+('Bouncy Bolson', 'bouncy', '18.04', true),
+('Crystal Clemmys', 'crystal', '16.04', true),
+('Crystal Clemmys', 'crystal', '18.04', true),
+('Dashing Diademata', 'dashing', '18.04', true),
+('Eloquent Elusor', 'eloquent', '18.04', true),
+('Foxy Fitzroy', 'foxy', '20.04', true),
+('Galactic Geochelone', 'galactic', '20.04', true);
+INSERT INTO ros_versions(name, full_name, ubu_version) VALUES
+('Humble Hawksbill', 'humble', '22.04'),
+('Iron Irwini', 'iron', '22.04'),
+('Jazzy Jalisco', 'jazzy', '24.04');
+
+SELECT * FROM ros_versions LIMIT 20;
+
 
