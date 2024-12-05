@@ -18,12 +18,14 @@ CREATE TABLE ros_versions (
 	name         VARCHAR NOT NULL, 
     ubu_version  VARCHAR NOT NULL,
     is_eol   BOOLEAN NOT NULL DEFAULT false
+
+    CONSTRAINT no_repeats_ros UNIQUE (name, ubu_version)
 );
 
 
 CREATE TABLE sdk_versions (
     id           SERIAL PRIMARY KEY UNIQUE NOT NULL, 
-	name         VARCHAR NOT NULL, 
+	name         VARCHAR UNIQUE NOT NULL, 
     year         INT NOT NULL CHECK (year >= 2000 AND year <= date_part('year', CURRENT_DATE)),
     does_compile BOOLEAN NOT NULL
 );
@@ -159,12 +161,11 @@ INSERT INTO cameras(name, type, is_eol) VALUES
 ('D435', 'Depth Camera', false),
 ('D435if', 'Depth Camera', false),
 ('D415', 'Depth Camera', false),
-('D415i', 'Depth Camera', false);
+('D415i', 'Depth Camera', false),
+('T265', 'Tracking Camera', true);
 
-SELECT * FROM cameras LIMIT 20;
 
-
-INSERT INTO ros_versions(name, full_name, ubu_version, is_eol) VALUES
+INSERT INTO ros_versions(full_name, name, ubu_version, is_eol) VALUES
 ('Ardent Apalone', 'ardent', '16.04', true),
 ('Bouncy Bolson', 'bouncy', '16.04', true),
 ('Bouncy Bolson', 'bouncy', '18.04', true),
@@ -174,16 +175,14 @@ INSERT INTO ros_versions(name, full_name, ubu_version, is_eol) VALUES
 ('Eloquent Elusor', 'eloquent', '18.04', true),
 ('Foxy Fitzroy', 'foxy', '20.04', true),
 ('Galactic Geochelone', 'galactic', '20.04', true);
-INSERT INTO ros_versions(name, full_name, ubu_version) VALUES
+INSERT INTO ros_versions(full_name, name, ubu_version) VALUES
 ('Humble Hawksbill', 'humble', '22.04'),
 ('Iron Irwini', 'iron', '22.04'),
 ('Jazzy Jalisco', 'jazzy', '24.04');
 
-SELECT * FROM ros_versions LIMIT 20;
-
 
 INSERT INTO sdk_versions(name, year, does_compile) VALUES
--- ('2.45.0', 2021, false);
+('2.45.0', 2021, false),
 ('2.47.0', 2021, true),
 ('2.48.0', 2021, true),
 ('2.49.0', 2021, true),
@@ -195,4 +194,77 @@ INSERT INTO sdk_versions(name, year, does_compile) VALUES
 ('2.55.1', 2024, false),
 ('2.56.3', 2024, false);
 
+
+INSERT INTO sdk_cameras_compatty(sdk, camera) 
+    SELECT 1 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE name = ANY(
+            '{"D415", "D435", "D435i", "D455", "L515", "T265"}'
+        )
+    UNION
+    SELECT 2 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE name = ANY(
+            '{"D415", "D435", "D435i", "D455", "L515", "T265"}'
+        )
+    UNION
+    SELECT 3 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE name = ANY(
+            '{"D415", "D435", "D435i", "D455", "L515", "T265"}'
+        )
+    UNION
+    SELECT 4 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE name = ANY(
+            '{"D415", "D435", "D435i", "D455", "L515", "T265"}'
+        )
+    UNION
+    SELECT 5 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE name = ANY(
+            '{"D415", "D435", "D435i", "D455", "L515", "T265"}'
+        )
+    UNION
+    SELECT 6 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE series = 'D400' OR name = 'L515' OR name = 'T265'
+    UNION
+    SELECT 7 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE series = 'D400'
+    UNION
+    SELECT 8 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE series = 'D400'
+    UNION
+    SELECT 9 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE series = 'D400'
+    UNION
+    SELECT 10 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE series = 'D400'
+    UNION
+    SELECT 11 AS sdk, cameras.id AS camera FROM cameras 
+        WHERE series = 'D400';
+    
+
+INSERT INTO ros_sdk_compatty(sdk, ros)
+    SELECT 2 AS sdk, id AS ros FROM ros_versions 
+        WHERE ros_versions.name = ANY(
+            '{"foxy", "eloquent", "dashing"}'
+        )
+    UNION
+    SELECT 6 AS sdk, id AS ros FROM ros_versions 
+        WHERE ros_versions.name = ANY(
+            '{"galactic", "rolling", "humble", "foxy"}'
+        )
+    UNION
+    SELECT 11 AS sdk, id AS ros FROM ros_versions 
+        WHERE ros_versions.name = ANY(
+            '{"rolling", "humble", "iron", "jazzy"}'
+        )
+    UNION
+    SELECT 12 AS sdk, id AS ros FROM ros_versions 
+        WHERE ros_versions.name = ANY(
+            '{"rolling", "foxy", "humble", "iron", "jazzy"}'
+        );
+
+-- queries
+
+
 SELECT * FROM sdk_versions LIMIT 20;
+UPDATE cameras 
+    SET is_eol = false 
+    WHERE name = 'T265';
