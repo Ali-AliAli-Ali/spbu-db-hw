@@ -6,10 +6,11 @@ CREATE TABLE cameras (
     name     VARCHAR UNIQUE NOT NULL,
 	series   VARCHAR,
     type     VARCHAR NOT NULL,
-    has_imu  BOOLEAN,
-    has_infr BOOLEAN,
+    has_imu  BOOLEAN DEFAULT false,
+    has_infr BOOLEAN DEFAULT false,
     is_eol   BOOLEAN NOT NULL DEFAULT false
 );
+ALTER TABLE cameras SET 
 
 
 CREATE TABLE ros_versions (
@@ -23,7 +24,7 @@ CREATE TABLE sdk_versions (
     id           SERIAL PRIMARY KEY UNIQUE NOT NULL, 
 	name         VARCHAR NOT NULL, 
     year         INT NOT NULL CHECK (year >= 2000 AND year <= date_part('year', CURRENT_DATE)),
-    is_compiling BOOLEAN NOT NULL
+    does_compile BOOLEAN NOT NULL
 );
 
 
@@ -52,3 +53,78 @@ CREATE TABLE sdk_cameras_compatty (
 );
 
 
+-- triggers for field setting and checking
+
+
+CREATE OR REPLACE FUNCTION set_series()
+RETURNS TRIGGER AS $$
+BEGIN
+	CASE 
+		WHEN NEW.name LIKE 'D4%'  THEN NEW.series = 'D400';
+		WHEN NEW.name LIKE 'L5%'  THEN NEW.series = 'L500';
+		WHEN NEW.name LIKE 'F2%'  THEN NEW.series = 'F200';
+		WHEN NEW.name LIKE 'SR3%' THEN NEW.series = 'SR300';
+		WHEN NEW.name LIKE 'T2%'  THEN NEW.series = 'T200';
+	END CASE;
+    RAISE NOTICE 'Series is set to %.', NEW.series;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_series_trigger
+    BEFORE INSERT OR UPDATE ON cameras
+    FOR EACH ROW 
+EXECUTE FUNCTION set_series();
+
+
+CREATE OR REPLACE FUNCTION check_type()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF NOT NEW.type = ANY(
+        '{"Depth Camera", "LiDAR Camera", "Tracking Camera", "Front Camera"}'
+    ) THEN
+        RAISE WARNING 'The camera type may be written wrong.' 
+        USING HINT = 'Please check your spelling and correct the camera type if needed.';
+    END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_type_trigger
+    BEFORE INSERT OR UPDATE ON cameras
+    FOR EACH ROW 
+EXECUTE FUNCTION check_type();
+
+
+CREATE OR REPLACE FUNCTION set_has_imu()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF NEW.name LIKE '%i%' THEN
+        RAISE NOTICE 'The camera seems to have an IMU. The according field is set to true';
+        NEW.has_imu = true;
+    END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_has_imu_trigger
+    BEFORE INSERT OR UPDATE ON cameras
+    FOR EACH ROW 
+EXECUTE FUNCTION set_has_imu();
+
+
+CREATE OR REPLACE FUNCTION set_has_infr()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF NEW.name LIKE '%f%' THEN
+        RAISE NOTICE 'The camera seems to have an IR-Pass filter. The according field is set to true';
+        NEW.has_infr = true;
+    END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_has_infr_trigger
+    BEFORE INSERT OR UPDATE ON cameras
+    FOR EACH ROW 
+EXECUTE FUNCTION set_has_infr();
