@@ -38,10 +38,34 @@ SAVEPOINT savepoint_newcam;
 
 ROLLBACK TO savepoint_200to250;
 
-    SELECT DISTINCT type FROM cameras;
-    INSERT INTO cameras(name, type) VALUES
-    ('L535', 'LiDAR Camera');
+    INSERT INTO cameras(name, type)
+    SELECT DISTINCT 'L535', type FROM cameras 
+        WHERE series = 'L500';
     SELECT * FROM cameras
     LIMIT 10;
 
+COMMIT;
+
+
+
+CREATE OR REPLACE FUNCTION catch_imu_infr_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (NEW.has_imu != OLD.has_imu) OR (NEW.has_infr != OLD.has_infr) THEN
+        RAISE EXCEPTION 'The fields you are trying to update are set automatically according to camera name.'
+        USING HINT = 'Please change the name to reset the fields.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER catch_opts_change_trigger
+    BEFORE UPDATE ON cameras
+    FOR EACH ROW
+EXECUTE FUNCTION catch_imu_infr_change();
+
+
+BEGIN;
+    UPDATE cameras SET has_imu = False 
+        WHERE name = 'D435if';
 COMMIT;
