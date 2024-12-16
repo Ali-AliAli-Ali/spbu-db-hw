@@ -265,14 +265,15 @@ INSERT INTO ros_sdk_compatty(sdk, ros)
 -- queries
 
 
-SELECT cameras.name AS camera, cameras.type AS camera_type, ros_versions.full_name AS ros 
+SELECT DISTINCT cameras.name AS camera, cameras.type AS camera_type, ros_versions.full_name AS ros 
     FROM cameras JOIN sdk_cameras_compatty 
         ON cameras.id = sdk_cameras_compatty.camera 
     JOIN ros_sdk_compatty 
         ON sdk_cameras_compatty.sdk = ros_sdk_compatty.sdk
     JOIN ros_versions 
         ON ros_sdk_compatty.ros = ros_versions.id
-ORDER BY camera;
+ORDER BY camera
+LIMIT 60;
 
 
 SELECT cameras.name AS camera, cameras.type AS camera_type, ros_sdk_compatty.sdk 
