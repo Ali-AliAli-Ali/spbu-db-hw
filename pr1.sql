@@ -273,26 +273,32 @@ SELECT DISTINCT cameras.name AS camera, cameras.type AS camera_type, ros_version
     JOIN ros_versions 
         ON ros_sdk_compatty.ros = ros_versions.id
 ORDER BY camera
-LIMIT 60;
+LIMIT 50;
 
 
-SELECT cameras.name AS camera, cameras.type AS camera_type, ros_sdk_compatty.sdk 
+SELECT DISTINCT cameras.name AS camera, cameras.type AS camera_type, sdk_versions.name AS sdk 
     FROM cameras JOIN sdk_cameras_compatty 
         ON cameras.id = sdk_cameras_compatty.camera
     JOIN ros_sdk_compatty 
         ON sdk_cameras_compatty.sdk = ros_sdk_compatty.sdk
     JOIN ros_versions 
-        ON ros_sdk_compatty.sdk = ros_versions.id;
+        ON ros_sdk_compatty.ros = ros_versions.id
+    JOIN sdk_versions 
+        ON ros_sdk_compatty.sdk = sdk_versions.id
+LIMIT 50;
+
 
 SELECT mode() WITHIN GROUP (ORDER BY year) AS popular_year 
     FROM sdk_versions
 LIMIT 20;
+
 
 SELECT ubu_version AS ubuntu, NOT BOOL_AND(is_eol) AS is_ros_mainained 
     FROM ros_versions 
 	GROUP BY ubu_version
     ORDER BY ubu_version
 LIMIT 20;
+
 
 SELECT ubu_version AS ubuntu, COUNT(ubu_version) AS supporting_ros_count 
     FROM ros_versions
