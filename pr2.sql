@@ -1,18 +1,14 @@
-CREATE OR REPLACE VIEW camera_sdk_compatty AS
-    SELECT DISTINCT cameras.name AS camera, cameras.type AS camera_type, sdk_versions.name AS sdk 
+CREATE OR REPLACE VIEW camera_sdk_names AS
+    SELECT cameras.name AS camera, cameras.type AS camera_type, sdk_versions.name AS sdk 
         FROM cameras JOIN sdk_cameras_compatty 
             ON cameras.id = sdk_cameras_compatty.camera
-        JOIN ros_sdk_compatty 
-            ON sdk_cameras_compatty.sdk = ros_sdk_compatty.sdk
-        JOIN ros_versions 
-            ON ros_sdk_compatty.ros = ros_versions.id
         JOIN sdk_versions 
-            ON ros_sdk_compatty.sdk = sdk_versions.id
-    ORDER BY camera;
+            ON sdk_cameras_compatty.sdk = sdk_versions.id
+    ORDER BY camera, sdk;
 
-SELECT * FROM camera_sdk_compatty
+SELECT * FROM camera_sdk_names
     WHERE sdk = (
-        SELECT MAX(sdk) FROM camera_sdk_compatty
+        SELECT MAX(sdk) FROM camera_sdk_names
     )
 LIMIT 20;
 
@@ -28,63 +24,45 @@ LIMIT 10;
 
 
 EXPLAIN ANALYZE
-WITH camera_sdk_names AS (
-    SELECT DISTINCT cameras.name AS camera, cameras.type AS camera_type, sdk_versions.name AS sdk 
-        FROM cameras JOIN sdk_cameras_compatty 
-            ON cameras.id = sdk_cameras_compatty.camera
-        JOIN ros_sdk_compatty 
-            ON sdk_cameras_compatty.sdk = ros_sdk_compatty.sdk
-        JOIN ros_versions 
-            ON ros_sdk_compatty.ros = ros_versions.id
-        JOIN sdk_versions 
-            ON ros_sdk_compatty.sdk = sdk_versions.id
+WITH sdk_imu_support AS (
+    SELECT sdk_versions.name AS sdk, BOOL_OR(cameras.has_imu) AS supports_imu, BOOL_OR(cameras.has_infr) AS supports_infr 
+        FROM cameras 
+            JOIN sdk_cameras_compatty 
+                ON cameras.id = sdk_cameras_compatty.camera
+            JOIN sdk_versions 
+                ON sdk_cameras_compatty.sdk = sdk_versions.id
+        GROUP BY sdk_versions.name
+        ORDER BY sdk_versions.name
 )
-SELECT camera_sdk_names.camera, camera_sdk_names.camera_type, camera_sdk_names.sdk, does_compile AS can_be_executed
-    FROM camera_sdk_names JOIN sdk_versions 
-        ON camera_sdk_names.sdk = sdk_versions.name
-ORDER BY camera, sdk;
+SELECT sdk, (supports_imu AND supports_infr) AS supports_imu_infr
+    FROM sdk_imu_support
+    GROUP BY sdk, supports_imu, supports_infr
+    ORDER BY sdk;
 
 '''
-Sort  (cost=21565.12..21872.04 rows=122767 width=97) (actual time=0.559..0.564 rows=18 loops=1)
-  Sort Key: cameras.name, sdk_versions_1.name
-  Sort Method: quicksort  Memory: 25kB
-  ->  Merge Join  (cost=2623.99..4471.40 rows=122767 width=97) (actual time=0.501..0.518 rows=18 loops=1)
-        Merge Cond: ((sdk_versions.name)::text = (sdk_versions_1.name)::text)
-        ->  Sort  (cost=82.01..84.96 rows=1180 width=33) (actual time=0.102..0.103 rows=11 loops=1)
+Group  (cost=126.62..137.61 rows=200 width=35) (actual time=0.252..0.264 rows=11 loops=1)
+  Group Key: sdk_versions.name, (bool_or(cameras.has_imu)), (bool_or(cameras.has_infr))
+  ->  Incremental Sort  (cost=126.62..136.11 rows=200 width=34) (actual time=0.251..0.254 rows=11 loops=1)
+        Sort Key: sdk_versions.name, (bool_or(cameras.has_imu)), (bool_or(cameras.has_infr))
+        Presorted Key: sdk_versions.name
+        Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+        ->  Sort  (cost=126.61..127.11 rows=200 width=34) (actual time=0.228..0.231 rows=11 loops=1)
               Sort Key: sdk_versions.name
               Sort Method: quicksort  Memory: 25kB
-              ->  Seq Scan on sdk_versions  (cost=0.00..21.80 rows=1180 width=33) (actual time=0.027..0.031 rows=11 loops=1)
-        ->  Sort  (cost=2541.98..2594.00 rows=20808 width=96) (actual time=0.395..0.399 rows=18 loops=1)
-              Sort Key: sdk_versions_1.name
-              Sort Method: quicksort  Memory: 25kB
-              ->  HashAggregate  (cost=841.47..1049.55 rows=20808 width=96) (actual time=0.276..0.370 rows=18 loops=1)
-                    Group Key: cameras.name, cameras.type, sdk_versions_1.name
-                    Batches: 1  Memory Usage: 793kB
-                    ->  Merge Join  (cost=363.09..685.41 rows=20808 width=96) (actual time=0.199..0.228 rows=58 loops=1)
-                          Merge Cond: (sdk_cameras_compatty.sdk = ros_sdk_compatty.sdk)
-                          ->  Sort  (cost=171.88..176.98 rows=2040 width=68) (actual time=0.099..0.102 rows=46 loops=1)
-                                Sort Key: sdk_cameras_compatty.sdk
-                                Sort Method: quicksort  Memory: 26kB
-                                ->  Hash Join  (cost=23.95..59.74 rows=2040 width=68) (actual time=0.063..0.084 rows=46 loops=1)
-                                      Hash Cond: (sdk_cameras_compatty.camera = cameras.id)
-                                      ->  Seq Scan on sdk_cameras_compatty  (cost=0.00..30.40 rows=2040 width=8) (actual time=0.019..0.023 rows=46 loops=1)
-                                      ->  Hash  (cost=16.20..16.20 rows=620 width=68) (actual time=0.023..0.023 rows=7 loops=1)
-                                            Buckets: 1024  Batches: 1  Memory Usage: 9kB
-                                            ->  Seq Scan on cameras  (cost=0.00..16.20 rows=620 width=68) (actual time=0.014..0.016 rows=7 loops=1)
-                          ->  Sort  (cost=191.21..196.31 rows=2040 width=40) (actual time=0.097..0.102 rows=55 loops=1)
-                                Sort Key: ros_sdk_compatty.sdk
-                                Sort Method: quicksort  Memory: 25kB
-                                ->  Hash Join  (cost=37.82..79.06 rows=2040 width=40) (actual time=0.077..0.088 rows=13 loops=1)
-                                      Hash Cond: (ros_sdk_compatty.sdk = sdk_versions_1.id)
-                                      ->  Hash Join  (cost=1.27..37.14 rows=2040 width=4) (actual time=0.044..0.051 rows=13 loops=1)
-                                            Hash Cond: (ros_sdk_compatty.ros = ros_versions.id)
-                                            ->  Seq Scan on ros_sdk_compatty  (cost=0.00..30.40 rows=2040 width=8) (actual time=0.012..0.013 rows=13 loops=1)
-                                            ->  Hash  (cost=1.12..1.12 rows=12 width=4) (actual time=0.022..0.022 rows=12 loops=1)
-                                                  Buckets: 1024  Batches: 1  Memory Usage: 9kB
-                                                  ->  Seq Scan on ros_versions  (cost=0.00..1.12 rows=12 width=4) (actual time=0.013..0.015 rows=12 loops=1)
-                                      ->  Hash  (cost=21.80..21.80 rows=1180 width=36) (actual time=0.017..0.017 rows=11 loops=1)
-                                            Buckets: 2048  Batches: 1  Memory Usage: 17kB
-                                            ->  Seq Scan on sdk_versions sdk_versions_1  (cost=0.00..21.80 rows=1180 width=36) (actual time=0.009..0.011 rows=11 loops=1)
-Planning Time: 0.846 ms
-Execution Time: 1.420 ms
+              ->  HashAggregate  (cost=116.97..118.97 rows=200 width=34) (actual time=0.186..0.193 rows=11 loops=1)
+                    Group Key: sdk_versions.name
+                    Batches: 1  Memory Usage: 40kB
+                    ->  Hash Join  (cost=60.50..101.67 rows=2040 width=34) (actual time=0.119..0.158 rows=46 loops=1)
+                          Hash Cond: (sdk_cameras_compatty.sdk = sdk_versions.id)
+                          ->  Hash Join  (cost=23.95..59.74 rows=2040 width=6) (actual time=0.052..0.076 rows=46 loops=1)
+                                Hash Cond: (sdk_cameras_compatty.camera = cameras.id)
+                                ->  Seq Scan on sdk_cameras_compatty  (cost=0.00..30.40 rows=2040 width=8) (actual time=0.014..0.019 rows=46 loops=1)
+                                ->  Hash  (cost=16.20..16.20 rows=620 width=6) (actual time=0.022..0.022 rows=8 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                      ->  Seq Scan on cameras  (cost=0.00..16.20 rows=620 width=6) (actual time=0.014..0.017 rows=8 loops=1)
+                          ->  Hash  (cost=21.80..21.80 rows=1180 width=36) (actual time=0.046..0.047 rows=11 loops=1)
+                                Buckets: 2048  Batches: 1  Memory Usage: 17kB
+                                ->  Seq Scan on sdk_versions  (cost=0.00..21.80 rows=1180 width=36) (actual time=0.032..0.035 rows=11 loops=1)
+Planning Time: 0.445 ms
+Execution Time: 0.430 ms
 '''
