@@ -17,7 +17,7 @@ CREATE TABLE ros_versions (
 	full_name    VARCHAR NOT NULL, 
 	name         VARCHAR NOT NULL, 
     ubu_version  VARCHAR NOT NULL,
-    is_eol   BOOLEAN NOT NULL DEFAULT false
+    is_eol       BOOLEAN NOT NULL DEFAULT false
 
     CONSTRAINT no_repeats_ros UNIQUE (name, ubu_version)
 );
